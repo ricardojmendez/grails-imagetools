@@ -1,13 +1,14 @@
-This is a very basic plugin, that so far encapsulates JAI calls for operations such as image loading, saving, cropping, masking and thumbnail creation.
+h1. Installation and usage
 
+This is a very basic plugin, that so far encapsulates JAI calls for operations such as image loading, saving, cropping, masking and thumbnail creation.
 
 From the root of your application, call
 
 {code}
-grails install-plugin http://ricardo.strangevistas.net/dev/grails-image-tools-1.0.1.zip
+grails install-plugin http://www.arquetipos.co.cr/blog/files/grails-image-tools-1.0.2.zip
 {code}
 
-All plugin dependencies - two JAI libraries - will be included.
+All plugin dependencies - two JAI libraries - will be included.  You can also find the plugin repository at [its new home on Github|http://github.com/ricardojmendez/grails-imagetools/].
 
 Once the plugin has been installed in your project you'll have a new class at your disposal, called ImageTool.   You can use an instance of this class to load an image, operate on it, and save the result.  
 
@@ -100,3 +101,19 @@ imageTool.saveOriginal()
 {code}
 
 That's all for now, folks.  Grab me on the Grails list or at ricardo at arquetipos dot co dot cr if you need any more pointers.  Good luck!
+
+
+
+h1. FAQs
+
+
+h2. mediaLib accelerator
+
+ImageTools uses [JAI|http://www.nabble.com/get-rid-of-%22Could-not-find-mediaLib-accelerator-wrapper-classes%22-t3889554.html] for its image-handling operations.  JAI can use an optional native library for extra performance, or can work in pure Java mode, but if the native library is not present you might get an exception like the following:.
+{code}
+Error: Could not find mediaLib accelerator wrapper classes. Continuing in pure Java mode
+Occurs in: com.sun.media.jai.mlib.MediaLibAccessor
+java.lang.NoClassDefFoundError: com/sun/medialib/mlib/Image
+at com.sun.media.jai.mlib.MediaLibAccessor$1.run(MediaLibAccessor.java:248)
+{code}
+This only means that the native libraries weren't found, and you can still use the ImageTools plugin like you would expect.  To see how to get rid of this error, or learn more about JAI's native support, [read this thread|http://www.nabble.com/get-rid-of-%22Could-not-find-mediaLib-accelerator-wrapper-classes%22-t3889554.html].
