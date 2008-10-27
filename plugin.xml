@@ -1,0 +1,10 @@
+<plugin name='image-tools' version='1.0.1'>
+  <author>Ricardo J. Mendez</author>
+  <authorEmail>ricardo@arquetipos.co.cr</authorEmail>
+  <title>Basic image tools based on JAI</title>
+  <documentation>http://grails.org/ImageTools+plugin</documentation>
+  <resources>
+    <resource>DataSource</resource>
+    <resource>UrlMappings</resource>
+  </resources>
+</plugin>

@@ -1,0 +1,102 @@
+This is a very basic plugin, that so far encapsulates JAI calls for operations such as image loading, saving, cropping, masking and thumbnail creation.
+
+
+From the root of your application, call
+
+{code}
+grails install-plugin http://ricardo.strangevistas.net/dev/grails-image-tools-1.0.1.zip
+{code}
+
+All plugin dependencies - two JAI libraries - will be included.
+
+Once the plugin has been installed in your project you'll have a new class at your disposal, called ImageTool.   You can use an instance of this class to load an image, operate on it, and save the result.  
+
+{code}
+// To load an image from a buffer
+def imageTool = new ImageTool()
+imageTool.load(f.getBytes())
+
+// To load an image from a path
+imageTool.load("/path/to/image.jpg")
+{code}
+
+You can save an in-memory snapshot of the image before applying any operations.
+
+{code}
+imageTool.saveOriginal()
+{code}
+
+Once loaded, the image can be resized by calling:
+
+{code}
+imageTool.thumbnail(640)  // With the desired thumbnail size
+{code}
+
+And then the resulting image can be saved to a file calling
+
+{code}
+imageTool.writeResult("smaller.640.jpg", "JPEG")
+{code}
+
+
+An important note is that the loaded image is never explicitly replaced after an operation - instead, a resulting image is created in the object. If you wish to apply more operations to the result, you should swap it with the originally loaded image.
+
+{code}
+imageTool.swapSource()
+{code}
+
+There are three functions that you use in order to apply an alpha mask to an image: first you load the alpha and the mask, and then apply them.
+
+{code}
+imageTool.loadAlpha("alpha.jpg")
+imageTool.loadMask("mask.jpg")
+imageTool.applyMask()
+{code}
+
+Easy enough, isn't it?  Let's go for a more complex example.  Suppose you want to load an image, reduce it to a maximum size of 640, crop it to a square, then create thumbnails in several sizes and apply masks that have the name "Alpha_XYZ.jpg" and "Mask_XYZ.jpg", where XYZ is the thumbnail size.  This is how you would do it:
+
+{code}
+def imageTool = new ImageTool()
+imageTool.load("/path/to/image.jpg")
+// Reduces the image size
+imageTool.thumbnail(640)
+// Saves the result
+imageTool.writeResult("image_smaller.jpg", "JPEG")
+// Crops it to a square
+imageTool.square()
+/* 
+ * Swaps the resulting image with the main one, so that we continue to
+ * operate on the square crop.
+ */
+imageTool.swapSource()
+// Creates a copy of the original for later restore
+imageTool.saveOriginal()
+/* 
+ * Iterate through the thumbnail sizes that we want
+ *
+ */
+[178, 133, 69].each {
+    def tempName = "image.${it}.jpg"
+    /*
+     * Creates and saves the thumbnail. It needs to be temporarily saved
+     * and re-loaded before applying the masking operation, because of 
+     * something that seems to be a JAI glitch.
+     * See the following link for details:
+     * http://ricardo.strangevistas.net/jai-and-masking-operations.html
+     */
+    imageTool.thumbnail(it)
+    imageTool.writeResult(tempName, "JPEG")
+    imageTool.load(tempName)
+    // Loads the alpha and mask, and applies them
+    imageTool.loadAlpha("Alpha_${it}.jpg")
+    imageTool.loadMask("Mask_${it}.jpg")
+    
+	imageTool.applyMask()
+	// Finally, save it and restore the original so that we can continue
+	// to operate on the unmodified image
+    imageTool.writeResult(tempname, "JPEG")
+    imageTool.restoreOriginal()
+}
+{code}
+
+That's all for now, folks.  Grab me on the Grails list or at ricardo at arquetipos dot co dot cr if you need any more pointers.  Good luck!
