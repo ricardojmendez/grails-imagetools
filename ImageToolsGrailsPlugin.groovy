@@ -1,5 +1,5 @@
 class ImageToolsGrailsPlugin {
-	def version = "1.0.2";
+	def version = "1.0.3";
 	def dependsOn = [:]
 	
 	def author = "Ricardo J. Mendez"
