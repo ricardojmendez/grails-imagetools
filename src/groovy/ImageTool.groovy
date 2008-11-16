@@ -1,10 +1,8 @@
+import java.awt.RenderingHints
 import java.io.*;
-import java.util.*;
 import java.awt.image.renderable.*;
 import javax.media.jai.*;
-import com.sun.media.jai.codec.*
-import java.awt.image.BufferedImage;
-import javax.imageio.ImageIO;
+import com.sun.media.jai.codec.*;
 
 /**
  * Helper class for handling images. Keeps a currently loaded image, as well 
@@ -25,11 +23,12 @@ class ImageTool {
 	private RenderedOp alpha = null;
 	private RenderedOp mask = null;
 
-	private boolean cropped = false;
+	/* Removes the accelaration lib exception */
+	static { System.setProperty("com.sun.media.jai.disableMediaLib", "true"); }
 
 	/**
 	 * Should a thumbnail be created only if it will be smaller in size than
-	 * the current image?
+	 * the current image? 
 	 */
 	boolean decreaseOnly = true;
 
@@ -128,27 +127,11 @@ class ImageTool {
 	 * @see <a href="http://java.sun.com/products/java-media/jai/iio.html">Possible JAI encodings</a>
 	 */
 	public void writeResult(String file, String type) throws IOException {
-		if (type == "JPEG" && cropped) {
-			// Workaround for JAI JPEG saving bug of no tile support (crop problems)
-			BufferedImage bufferedImage = result.getRendering().getAsBufferedImage();
-
-			try {
-				FileOutputStream fos = new FileOutputStream(file);
-				BufferedOutputStream bos = new BufferedOutputStream(fos);
-				ImageIO.write(bufferedImage, type, bos);
-				cropped = false;
-			}
-			catch (IOException e) {
-				// handle errors
-			}
-		}
-		else {
-			FileOutputStream os = new FileOutputStream(file);
-			JAI.create("encode", result, os, type, null);
-			os.close()
-		}
-
+		FileOutputStream os = new FileOutputStream(file);
+		JAI.create("encode", result, os, type, null);
+		os.close()
 	}
+
 
 	/**
 	 * Creates a thumbnail of a maximum length and stores it in the result image
@@ -174,6 +157,78 @@ class ImageTool {
 	}
 
 	/**
+	 * This method creates a thumbnail of the maxWidth and maxHeight it takes as a parameter
+	 *
+	 * Example : Calling the method thumnailSpecial(640, 480, 1, 1)
+	 * will never produce images larger than 640 on the width, and never larger than 480 on the height and use
+	 * InterpolationBilinear(8) and scale
+	 *
+	 * @param maxWidth
+	 * The maximum width the thumbnail is allowed to have
+	 *
+	 * @param maxHeigth
+	 * The maximum height the thumbnail is allowed to have
+	 *
+	 * @param interPolationType
+	 * Is for you to choose what interpolation you wish to use
+	 * 1 : InterpolationBilinear(8) // Produces good image quality with smaller image size(byte) then the other two
+	 * 2 : InterpolationBicubic(8)  // Supposed to produce better than above, but also larger size(byte)
+	 * 3 : InterpolationBicubic2(8) // Supposed to produce the best of the three, but also largest size(byte)
+	 *
+	 * @param renderingType
+	 * Too choose the rendering type
+	 * 1: Uses scale // Better on larger thumbnails
+	 * 2: Uses SubsampleAverage  // Produces clearer images when it comes to really small thumbnail e.g 80x60
+	 */
+	public void thumbnailSpecial(float maxWidth, float maxHeight, int interPolationType, int renderingType) {
+		if (height <= maxHeight && width <= maxWidth) {
+			/* Don't change, keep it as it is, even though one might loose out on the compression included below (not sure)*/
+			result = image
+		}
+		else {
+			boolean tall = (height * (maxWidth / maxHeight) > width);
+			float modifier = maxWidth / (float) (tall ? (height * (maxWidth / maxHeight)) : width);
+			ParameterBlock params = new ParameterBlock();
+			params.addSource(image);
+
+			/* Had to do this because of that the different rendering options require either float or double */
+			switch (renderingType) {
+				case 1: params.add(modifier);//x scale factor
+					params.add(modifier);//y scale factor
+					break;
+				case 2: params.add((double) modifier);//x scale factor
+					params.add((double) modifier);//y scale factor
+					break;
+				default:
+					params.add(modifier);//x scale factor
+					params.add(modifier);//y scale factor
+					break;
+			}
+
+			params.add(0.0F);//x translate
+			params.add(0.0F);//y translate
+			switch (interPolationType) {
+				case 1: params.add(new InterpolationBilinear(8)); break; // Produces good image quality with smaller image size(byte) then the other two
+				case 2: params.add(new InterpolationBicubic(8)); break;  // Supposed to produce better than above, but also larger size(byte)
+				case 3: params.add(new InterpolationBicubic2(8)); break; // Supposed to produce the best of the two, but also largest size(byte)
+				default: params.add(new InterpolationBilinear(8)); break;
+			}
+
+			switch (renderingType) {
+				case 1: result = JAI.create("scale", params); break;
+				case 2:
+					RenderingHints qualityHints = new RenderingHints(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+					result = JAI.create("SubsampleAverage", params, qualityHints); break;
+				default: result = JAI.create("scale", params); break;
+			}
+		}
+	}
+
+	public void setImageToNull() {
+		image = null;
+	}
+
+	/**
 	 * Crops the image and stores the result
 	 *
 	 * @param edgeX Horizontal crop. The image will be cropped edgeX/2 on both sides.
@@ -187,8 +242,6 @@ class ImageTool {
 		params.add((float) (width - edgeX));//width
 		params.add((float) (height - edgeY));//height
 		result = JAI.create("crop", params);
-
-		cropped = true
 	}
 
 	/**
@@ -206,7 +259,6 @@ class ImageTool {
 			cropX = 0
 			cropY = -border
 		}
-		println "squaring: " + cropX + ", " + cropY
 		crop(cropX, cropY)
 	}
 
@@ -222,71 +274,4 @@ class ImageTool {
 		params.add(new Boolean(false));
 		result = JAI.create("composite", params, null);
 	}
-
-
-	/**
-	 * Creates a thumbnail of a maximum length and stores it in the result image
-	 *
-	 * @param edgeLength Maximum length
-	 */
-	public void thumbnailBiC(float edgeLength) {
-		if (height < edgeLength && width < edgeLength && decreaseOnly) {
-			result = image
-		}
-		else {
-			boolean tall = (height * (400 / 300) > width);
-			float modifier = edgeLength / (float) (tall ? height * (400 / 300) : width);
-			ParameterBlock params = new ParameterBlock();
-			params.addSource(image);
-			params.add(modifier);//x scale factor
-			params.add(modifier);//y scale factor
-			params.add(0.0F);//x translate
-			params.add(0.0F);//y translate
-			params.add(new InterpolationBicubic(8));//interpolation method
-			result = JAI.create("scale", params);
-		}
-	}
-
-	/**
-	 * Creates a thumbnail of a maximum length and stores it in the result image
-	 *
-	 * @param edgeLength Maximum length
-	 */
-	public void thumbnailBiC2(float edgeLength) {
-		if (height < edgeLength && width < edgeLength && decreaseOnly) {
-			result = image
-		}
-		else {
-			boolean tall = (height * (400 / 300) > width);
-			float modifier = edgeLength / (float) (tall ? height * (400 / 300) : width);
-			ParameterBlock params = new ParameterBlock();
-			params.addSource(image);
-			params.add(modifier);//x scale factor
-			params.add(modifier);//y scale factor
-			params.add(0.0F);//x translate
-			params.add(0.0F);//y translate
-			params.add(new InterpolationBicubic2(8));//interpolation method
-			result = JAI.create("scale", params);
-		}
-	}
-
-
-	public void thumbnailBiL(float edgeLength) {
-		if (height < edgeLength && width < edgeLength && decreaseOnly) {
-			result = image
-		}
-		else {
-			boolean tall = (height * (400 / 300) > width);
-			float modifier = edgeLength / (float) (tall ? height * (400 / 300) : width);
-			ParameterBlock params = new ParameterBlock();
-			params.addSource(image);
-			params.add(modifier);//x scale factor
-			params.add(modifier);//y scale factor
-			params.add(0.0F);//x translate
-			params.add(0.0F);//y translate
-			params.add(new InterpolationBilinear(8));//interpolation method
-			result = JAI.create("scale", params);
-		}
-	}
-
 }
