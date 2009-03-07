@@ -131,6 +131,18 @@ class ImageTool {
 		JAI.create("encode", result, os, type, null);
 		os.close()
 	}
+	
+	/**
+     * Returns the resulting image as a byte array.
+     *
+     * @param type file type for the image
+     * @see <a href="http://java.sun.com/products/java-media/jai/iio.html">Possible JAI encodings</a>
+     */
+    public byte[] getBytes(String type) throws IOException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        JAI.create("encode", result, bos, type, null);
+        return bos.toByteArray()
+    }
 
 
 	/**

@@ -39,6 +39,12 @@ And then the resulting image can be saved to a file calling
 imageTool.writeResult("smaller.640.jpg", "JPEG")
 {code}
 
+Starting on 1.0.4, it can also be saved as a byte array, courtesy of code sent in by Paul Bowler:
+
+{code}
+var arr = imageTool.getBytes("JPEG")
+{code}
+
 
 An important note is that the loaded image is never explicitly replaced after an operation - instead, a resulting image is created in the object. If you wish to apply more operations to the result, you should swap it with the originally loaded image.
 
