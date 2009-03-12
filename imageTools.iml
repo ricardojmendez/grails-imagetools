@@ -5,13 +5,7 @@
       <configuration />
     </facet>
     <facet type="Spring" name="Spring">
-      <configuration>
-        <options>
-          <option name="enableValidation" value="false" />
-          <option name="reportErrorsAsWarnings" value="true" />
-        </options>
-        <customNs />
-      </configuration>
+      <configuration />
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
@@ -43,7 +37,6 @@
       </library>
     </orderEntry>
     <orderEntry type="library" name="grails-1.0.3" level="application" />
-    <orderEntryProperties />
   </component>
 </module>
 

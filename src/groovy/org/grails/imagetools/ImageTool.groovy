@@ -1,3 +1,5 @@
+package org.grails.imagetools
+
 import java.awt.RenderingHints
 import java.io.*;
 import java.awt.image.renderable.*;
