@@ -1,4 +1,4 @@
-package org.grails.imagetools
+package org.grails.plugins.imagetools
 
 import java.awt.RenderingHints
 import java.io.*;
