@@ -201,21 +201,27 @@ class ImageTool {
 		}
 		else {
 			boolean tall = (height * (maxWidth / maxHeight) > width);
-			float modifier = maxWidth / (float) (tall ? (height * (maxWidth / maxHeight)) : width);
+			double modifier = maxWidth / (float) (tall ? (height * (maxWidth / maxHeight)) : width);
 			ParameterBlock params = new ParameterBlock();
 			params.addSource(image);
 
-			/* Had to do this because of that the different rendering options require either float or double */
+			// We had to do this because of that the different rendering 
+			// options require either float or double.  This ended up having
+			// a side effect of Java apparently not correctly converting from
+			// floats to double, so we have to keep the value as a double
+			// and then convert to float when necessary
 			switch (renderingType) {
-				case 1: params.add(modifier);//x scale factor
-					params.add(modifier);//y scale factor
+				case 1: 
+					params.add((float)modifier);//x scale factor
+					params.add((float)modifier);//y scale factor
 					break;
-				case 2: params.add((double) modifier);//x scale factor
-					params.add((double) modifier);//y scale factor
-					break;
-				default:
+				case 2: 
 					params.add(modifier);//x scale factor
 					params.add(modifier);//y scale factor
+					break;
+				default:
+					params.add((float)modifier);//x scale factor
+					params.add((float)modifier);//y scale factor
 					break;
 			}
 
