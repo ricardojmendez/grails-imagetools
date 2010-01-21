@@ -1,4 +1,4 @@
-<plugin name='image-tools' version='1.0.4' grailsVersion='1.1 &gt; *'>
+<plugin name='image-tools' version='1.0.5' grailsVersion='1.1 &gt; *'>
   <author>Ricardo J. Mendez</author>
   <authorEmail>ricardo@arquetipos.co.cr</authorEmail>
   <title>Basic image tools based on JAI</title>
