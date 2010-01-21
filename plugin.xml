@@ -1,4 +1,4 @@
-<plugin name='image-tools' version='1.0.5' grailsVersion='1.1 &gt; *'>
+<plugin name='image-tools' version='1.0.5' grailsVersion='1.2.0 &gt; *'>
   <author>Ricardo J. Mendez</author>
   <authorEmail>ricardo@arquetipos.co.cr</authorEmail>
   <title>Basic image tools based on JAI</title>
@@ -7,5 +7,10 @@
     <resource>DataSource</resource>
     <resource>UrlMappings</resource>
   </resources>
-  <dependencies />
+  <dependencies>
+    <resolvers>
+      <resolver type='grailsPlugins' name='grailsPlugins' />
+    </resolvers>
+  </dependencies>
+  <behavior />
 </plugin>
