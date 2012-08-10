@@ -135,6 +135,30 @@ class ImageTool {
 	}
 	
 	/**
+	 * Writes the resulting image to a file. This method allows specification of a quality hint, which will be
+	 * used for output to jpeg format only.
+	 * 
+	 * @param file full path where the image should be saved
+	 * @param type file type for the image
+	 * @param quality a value between 0.0 (lowest quality) and 1.0 (highest quality) 
+	 */
+	public void writeResult(String file, String type, float quality) throws IOException {
+		FileOutputStream os = new FileOutputStream(file);
+		Object param = null;
+		if (type.toLowerCase() == "jpeg") {
+			try {
+				Class c = Class.forName("com.sun.media.jai.codec.JPEGEncodeParam");
+				param = c.newInstance();
+				param.setQuality(quality);
+			} catch (Exception ex) {
+				log.warn("unable to set jpeg encode param", ex);
+			}
+		}
+		JAI.create("encode", result, os, type, param);
+		os.close()
+	}
+
+	/**
      * Returns the resulting image as a byte array.
      *
      * @param type file type for the image
